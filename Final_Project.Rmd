@@ -6,7 +6,9 @@ output: html_document
 ---
 Data source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
 
-Step1: Loading required librares
+Step1:
+---
+Loading required librares
 
 ```{r}
 library(caret)
@@ -19,12 +21,13 @@ library(randomForest)
 Step:2
 ---
 -> Loading training data set
----
+
 -> Running through the dataset a lot of missing values were observed, so they were cleaned, by identifying rows with missing values
----
+
 -> Rows 1:7 were also removed as they were information related to user and time stamp, in no form they relate to classe
----
+
 This results in a training dataset with 53 rows
+
 
 ```{r}
 training = read.csv("E:/Practical Machine Learning/Prediction Assignment/pml-training.csv",
@@ -43,13 +46,12 @@ for (i in 1:dim(training)[2])
 training <- training[,-col]
 training <- training[,-c(1:7)]
 dim(training)
-
 ```
-
+---
 Step:3 
 ---
 We try to check correlations between variables.
----
+
 These plots show us very little direct correlations between classe and predictor variables.
 
 ```{r}
@@ -61,7 +63,7 @@ featurePlot(training[,8:12], training[,53],"pairs" )
 Step:4
 ---
 Training set is the only set we have got with classe information.
----
+
 so we will split it into subsets of training and validation.
 
 ```{r}
@@ -73,15 +75,14 @@ SubTest = training[-inSubTrain,]
 
 training <- SubTrain
 validation <- SubTest
-
 ```
 
 Step:5
 ---
 Since we could not find any very direct corelations so we will use all available variables and hope to go a good model.
----
+
 Also, we will try to get accurate model with svm first then will try random forest.
----
+
 Going through the paper on human activity recognition few researchers got very good accuracy by combining svm and naive bayes model
 
 ```{r}
@@ -95,13 +96,12 @@ mod2 <- randomForest(classe ~ .,
 Step:6
 ---
 Testing training set accuract and table on both the models
----
+
 We observe randomForest is performing fantastic but this could also be because of overfitting
----
+
 so  we will test these models for validation set as well and check how they are performing
 
 ```{r}
-
 PredTrainMod1 <- predict(mod1, training)
 PredTrainMod2 <- predict(mod2, training, type="class")
 
@@ -109,10 +109,16 @@ print("SVM model on training")
 confusionMatrix(PredTrainMod1, training$classe)$overall[1]
 table(PredTrainMod1, training$classe)
 
+
 print("Random forest model on training")
 confusionMatrix(PredTrainMod2, training$classe)$overall[1]
 table(PredTrainMod2, training$classe)
+```
+In sample error [SVM] = 0.0470448
 
+In sample error [Random Forest]= 0
+
+```{r}
 
 PredValidationMod1 <- predict(mod1, validation)
 PredValidationMod2 <- predict(mod2, validation, type="class")
@@ -121,19 +127,27 @@ print("SVM model on validation")
 confusionMatrix(PredValidationMod1, validation$classe)$overall[1]
 table(PredValidationMod1, validation$classe)
 
+
 print("Random forest model on validation")
 confusionMatrix(PredValidationMod2, validation$classe)$overall[1]
 table(PredValidationMod2, validation$classe)
+
 ```
 
 This shows that random forest is still performing better than SVM.
 ---
+
+Out of Sample Error [SVM]=0.0535305
+
+Out of sample error [Random Forest]=7.77e-10
+
 So we will select random forest as final model.
----
+
+
 Step:7
 ---
 Now we will apply same data treatment to testing set and run it on random forest model (mod2) to obtain our estimations on test data
----
+
 ```{r}
 testing = read.csv("E:/Practical Machine Learning/Prediction Assignment/pml-testing.csv",
                    na.strings = c("","NA"))
@@ -154,6 +168,4 @@ dim(testing)
  
 PredTestMod2 <- predict(mod2, testing, type="class")
 PredTestMod2
-
-
 ```
